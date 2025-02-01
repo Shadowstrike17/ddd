@@ -2,7 +2,7 @@
 
 :prompt
 echo.
-set /p input="brat > "
+set /p input="v3nom > "
 
 rem Use double quotes consistently and handle blank input properly
 if "%input%" EQU "help" goto :menu
