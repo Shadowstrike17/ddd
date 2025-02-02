@@ -99,23 +99,26 @@ goto :prompt
 
 :openwebsite
 echo.
-set /p url="Enter the website URL (e.g., google.com): "
+set /p url="Enter the website URL (e.g., https://google.com): "
 
-:: Open Chrome, create a new tab, type URL, press Enter
+:: Open Chrome and wait a bit
 start "" chrome.exe
-timeout /t 1 >nul
-(
-    echo Set WshShell = CreateObject("WScript.Shell")
-    echo WScript.Sleep 1000
-    echo WshShell.SendKeys "^t"
-    echo WScript.Sleep 500
-    echo WshShell.SendKeys "%url%"
-    echo WScript.Sleep 500
-    echo WshShell.SendKeys "{ENTER}"
-) > "%temp%\openchrome.vbs"
-cscript //nologo "%temp%\openchrome.vbs"
-del "%temp%\openchrome.vbs"
+timeout /t 2 >nul
 
+:: Create a temporary VBScript file
+echo Set WshShell = CreateObject("WScript.Shell") > "%temp%\openchrome.vbs"
+echo WScript.Sleep 2000 >> "%temp%\openchrome.vbs"
+echo WshShell.SendKeys "^t" >> "%temp%\openchrome.vbs"
+echo WScript.Sleep 500 >> "%temp%\openchrome.vbs"
+echo WshShell.SendKeys "%url%" >> "%temp%\openchrome.vbs"
+echo WScript.Sleep 500 >> "%temp%\openchrome.vbs"
+echo WshShell.SendKeys "{ENTER}" >> "%temp%\openchrome.vbs"
+
+:: Run the VBScript to open the website
+cscript //nologo "%temp%\openchrome.vbs"
+
+:: Delete the script after execution
+del "%temp%\openchrome.vbs"
 goto :prompt
 
 :menu
