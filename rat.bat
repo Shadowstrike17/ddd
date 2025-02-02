@@ -26,8 +26,6 @@ if "%input%" EQU "2" goto :pcinfo
 if "%input%" EQU "3" goto :geolocate
 if "%input%" EQU "4" goto :pcmanage
 if "%input%" EQU "5" goto :revshell
-if "%input%" EQU "6" goto :messagebox
-if "%input%" EQU "7" goto :openwebsite
 if "%input%" EQU "" goto :prompt
 
 goto :prompt
@@ -90,37 +88,6 @@ echo Entering remote shell. Type "exit" to quit.
 call cmd.exe
 goto :prompt
 
-:messagebox
-echo.
-set /p boxtitle="Enter message box title: "
-set /p boxmessage="Enter message: "
-mshta vbscript:Execute("MsgBox """%boxmessage%"",64,""%boxtitle%""")
-goto :prompt
-
-:openwebsite
-echo.
-set /p url="Enter the website URL (e.g., https://google.com): "
-
-:: Open Chrome and wait a bit
-start "" chrome.exe
-timeout /t 2 >nul
-
-:: Create a temporary VBScript file
-echo Set WshShell = CreateObject("WScript.Shell") > "%temp%\openchrome.vbs"
-echo WScript.Sleep 2000 >> "%temp%\openchrome.vbs"
-echo WshShell.SendKeys "^t" >> "%temp%\openchrome.vbs"
-echo WScript.Sleep 500 >> "%temp%\openchrome.vbs"
-echo WshShell.SendKeys "%url%" >> "%temp%\openchrome.vbs"
-echo WScript.Sleep 500 >> "%temp%\openchrome.vbs"
-echo WshShell.SendKeys "{ENTER}" >> "%temp%\openchrome.vbs"
-
-:: Run the VBScript to open the website
-cscript //nologo "%temp%\openchrome.vbs"
-
-:: Delete the script after execution
-del "%temp%\openchrome.vbs"
-goto :prompt
-
 :menu
 echo.
 echo ============[ Menu ]=============
@@ -129,8 +96,6 @@ echo 2) PC info
 echo 3) Geolocation
 echo 4) PC management
 echo 5) Remote shell
-echo 6) Show a Message Box
-echo 7) Open Website in Chrome
 echo =================================
 echo.
 goto :prompt
