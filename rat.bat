@@ -92,14 +92,28 @@ goto :prompt
 
 :messagebox
 echo.
-set /p msg="Enter your message: "
-mshta vbscript:Execute("MsgBox """%msg%""",64,""V3nom Alert"" ")
+set /p boxtitle="Enter the title of the message box: "
+set /p boxmsg="Enter the message: "
+mshta vbscript:Execute("MsgBox """%boxmsg%""",64,"""%boxtitle%""") 
 goto :prompt
 
 :openwebsite
 echo.
-set /p url="Enter the website URL: "
-start "" "%url%"
+set /p url="Enter the website URL (e.g., google.com): "
+
+:: Launch Chrome, open a new tab, type the URL, and press Enter
+start "" chrome.exe
+timeout /t 1 >nul
+(
+    echo WshShell.SendKeys "^t"
+    echo WScript.Sleep 500
+    echo WshShell.SendKeys "%url%"
+    echo WScript.Sleep 500
+    echo WshShell.SendKeys "{ENTER}"
+) > "%temp%\openchrome.vbs"
+cscript //nologo "%temp%\openchrome.vbs"
+del "%temp%\openchrome.vbs"
+
 goto :prompt
 
 :beep
@@ -117,7 +131,7 @@ echo 3) Geolocation
 echo 4) PC management
 echo 5) Remote shell
 echo 6) Show a Message Box
-echo 7) Open Website
+echo 7) Open Website in Chrome
 echo 8) System Beep
 echo =================================
 echo.
