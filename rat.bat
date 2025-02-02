@@ -1,19 +1,35 @@
 @echo off
+title v3nom Console
+color 0A  REM Green hacker theme
+
+:: Clear screen and show ASCII Art
+cls
+echo.
+echo  ██╗   ██╗███████╗███╗   ██╗ ██████╗ ███╗   ███╗
+echo  ██║   ██║██╔════╝████╗  ██║██╔═══██╗████╗ ████║
+echo  ██║   ██║█████╗  ██╔██╗ ██║██║   ██║██╔████╔██║
+echo  ██║   ██║██╔══╝  ██║╚██╗██║██║   ██║██║╚██╔╝██║
+echo  ╚██████╔╝███████╗██║ ╚████║╚██████╔╝██║ ╚═╝ ██║
+echo   ╚═════╝ ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝
+echo.
+echo  -=[ Welcome to V3nom Command Console ]=-
+echo.
 
 :prompt
 echo.
 set /p input="v3nom > "
 
-rem Use double quotes consistently and handle blank input properly
 if "%input%" EQU "help" goto :menu
 if "%input%" EQU "1" goto :wifipassword
 if "%input%" EQU "2" goto :pcinfo
 if "%input%" EQU "3" goto :geolocate
 if "%input%" EQU "4" goto :pcmanage
 if "%input%" EQU "5" goto :revshell
+if "%input%" EQU "6" goto :messagebox
+if "%input%" EQU "7" goto :openwebsite
+if "%input%" EQU "8" goto :beep
 if "%input%" EQU "" goto :prompt
 
-rem If no valid input, re-prompt
 goto :prompt
 
 :wifipassword
@@ -28,9 +44,9 @@ echo.
 goto :prompt
 
 :pcinfo
+echo.
 FOR /F "tokens=2 delims=:" %%a in ('systeminfo ^| find "OS Name"') do set osname=%%~a
 FOR /F "tokens=2 delims=:" %%a in ('systeminfo ^| find "System Manufacturer"') do set manufacture=%%~a
-set owner=%owner: =%
 set osname=%osname:~19%
 set manufacture=%manufacture:~7%
 echo.
@@ -74,14 +90,35 @@ echo Entering remote shell. Type "exit" to quit.
 call cmd.exe
 goto :prompt
 
+:messagebox
+echo.
+set /p msg="Enter your message: "
+mshta vbscript:Execute("MsgBox """%msg%""",64,""V3nom Alert"" ")
+goto :prompt
+
+:openwebsite
+echo.
+set /p url="Enter the website URL: "
+start "" "%url%"
+goto :prompt
+
+:beep
+echo.
+echo Beeping...
+echo ^G^G^G
+goto :prompt
+
 :menu
 echo.
-echo ===== Menu =====
+echo ============[ Menu ]=============
 echo 1) WiFi password recovery
 echo 2) PC info
 echo 3) Geolocation
 echo 4) PC management
 echo 5) Remote shell
-echo =================
+echo 6) Show a Message Box
+echo 7) Open Website
+echo 8) System Beep
+echo =================================
 echo.
 goto :prompt
