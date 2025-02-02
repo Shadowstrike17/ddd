@@ -27,7 +27,6 @@ if "%input%" EQU "4" goto :pcmanage
 if "%input%" EQU "5" goto :revshell
 if "%input%" EQU "6" goto :messagebox
 if "%input%" EQU "7" goto :openwebsite
-if "%input%" EQU "8" goto :beep
 if "%input%" EQU "" goto :prompt
 
 goto :prompt
@@ -92,9 +91,7 @@ goto :prompt
 
 :messagebox
 echo.
-set /p boxtitle="Enter the title of the message box: "
-set /p boxmsg="Enter the message: "
-mshta vbscript:Execute("MsgBox """%boxmsg%""",64,"""%boxtitle%""") 
+mshta vbscript:Execute("MsgBox ""Hi hi"",64,""Error Occurred in This Script""")
 goto :prompt
 
 :openwebsite
@@ -105,6 +102,8 @@ set /p url="Enter the website URL (e.g., google.com): "
 start "" chrome.exe
 timeout /t 1 >nul
 (
+    echo Set WshShell = CreateObject("WScript.Shell")
+    echo WScript.Sleep 1000
     echo WshShell.SendKeys "^t"
     echo WScript.Sleep 500
     echo WshShell.SendKeys "%url%"
@@ -114,12 +113,6 @@ timeout /t 1 >nul
 cscript //nologo "%temp%\openchrome.vbs"
 del "%temp%\openchrome.vbs"
 
-goto :prompt
-
-:beep
-echo.
-echo Beeping...
-echo ^G^G^G
 goto :prompt
 
 :menu
@@ -132,7 +125,6 @@ echo 4) PC management
 echo 5) Remote shell
 echo 6) Show a Message Box
 echo 7) Open Website in Chrome
-echo 8) System Beep
 echo =================================
 echo.
 goto :prompt
