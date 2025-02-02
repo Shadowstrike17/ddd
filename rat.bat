@@ -1,9 +1,10 @@
 @echo off
 title v3nom Console
-color 0A  REM Green hacker theme
-
-:: Clear screen and show ASCII Art
 cls
+:: Set Green Hacker Theme
+color 0A  
+
+:: Display ASCII Art
 echo.
 echo  ██╗   ██╗███████╗███╗   ██╗ ██████╗ ███╗   ███╗
 echo  ██║   ██║██╔════╝████╗  ██║██╔═══██╗████╗ ████║
@@ -91,14 +92,16 @@ goto :prompt
 
 :messagebox
 echo.
-mshta vbscript:Execute("MsgBox ""Hi hi"",64,""Error Occurred in This Script""")
+set /p boxtitle="Enter message box title: "
+set /p boxmessage="Enter message: "
+mshta vbscript:Execute("MsgBox """%boxmessage%"",64,""%boxtitle%""")
 goto :prompt
 
 :openwebsite
 echo.
 set /p url="Enter the website URL (e.g., google.com): "
 
-:: Launch Chrome, open a new tab, type the URL, and press Enter
+:: Open Chrome, create a new tab, type URL, press Enter
 start "" chrome.exe
 timeout /t 1 >nul
 (
